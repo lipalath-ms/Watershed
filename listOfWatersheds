@@ -1,0 +1,88 @@
+# ***************************************************************************   
+# *	Name: List of watersheds and datasets available for each watershed      *
+# *	Author: Lisa Paul Palathingal                                           *
+# ***************************************************************************
+
+from pprint import pprint
+import requests
+import json
+
+# Function Name: listOfWatersheds
+# Function Description: The function first displays a list of watersheds available from gstore (from the url specified below). User selects a watershed from the list and the function prints the datasets available for the selected watershed (Datasets are indexed). User selects the index of the data items needed from the dataset. The function prints the requested data items from the dataset.
+
+def listOfWatersheds():
+    count = 0
+    index = 1
+    listOfNames = []
+    listOfIds = []
+    
+    #url containing the list of watershed
+    rWatersheds = requests.get('http://gstore.unm.edu/apps/rgis/search/datasets.json?version=3&offset=0&limit=5')
+    rData = rWatersheds.json()
+    pprint(rData) #prints the content available from the specified url
+    results = rData['results']
+    countOfWatersheds = rData['subtotal']
+    
+    #displays the name of all watersheds
+    for result in results:
+        print result['description']
+        listOfNames.append(result['description']) #create a list of names of watersheds
+        listOfIds.append(result['uuid']) #create a list of uuids of watersheds
+
+    #User selects a name from the list of watersheds
+    nameOfWatershed = raw_input("\n\nSelect a watershed: ")
+    print "\n\nDatasets available for %s:\n" %nameOfWatershed
+    
+    #get uuid of selected watershed
+    while count <= countOfWatersheds:
+        if nameOfWatershed == listOfNames[count]:
+            uid = listOfIds[count]
+            break
+        else:
+            count += 1  
+
+    #url containing the datasets for the selected watershed
+    rDatasets = requests.get('http://gstore.unm.edu/apps/rgis/datasets/%s/services.json' %uid) 
+    #url2 = requests.get('http://gstore.unm.edu/apps/rgis/search/collection/%s/datasets.json' %uid) 
+    rrData = rDatasets.json()
+    #pprint(data)
+    print "\n\n"
+
+    #Get the length of Dataset
+    lengthOfDataset = len(rrData)
+    
+    #print Dataset along with indices for data items   
+    dataItems = rrData.items()
+    for k, v in dataItems:
+        print index, k, v
+        index += 1   
+    
+    # Function Name: listOfDataItems
+    # Function Description: Function displays data items needed by the user from the Dataset
+
+    def listOfDataItems(lengthOfDataset, dataItems):
+        start = 1
+        indexOfDataItem = input("\n\nSelect the data item from the set:\t")
+        while start <= lengthOfDataset:
+            if indexOfDataItem == start:
+                print dataItems[start-1]
+                break
+            else:
+                start += 1
+    
+    listOfDataItems(lengthOfDataset, dataItems)
+    while True:
+        answer = raw_input("\nDo you want more items? (Yes/No):\t")
+        if answer == "Yes":
+            listOfDataItems(lengthOfDataset, dataItems)
+        else:
+            print "\n"
+            break
+     
+print "\n\nList of all watersheds available:\n\n"
+listOfWatersheds()
+
+
+
+
+
