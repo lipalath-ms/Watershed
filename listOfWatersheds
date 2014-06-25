@@ -89,7 +89,7 @@ def listOfWatersheds():
                     code.write(rDownload.content)
                 print "\nDownloading completed\n"   
                 zip = zipfile.ZipFile(r'%s.zip' %basename)
-                zip.extractall(r'%s' %basename) // unzip file
+                zip.extractall(r'%s' %basename) #unzip file
                 print "Files available are:\n"
                 dirList = os.listdir(basename)
                 for fname in dirList:
