@@ -1,132 +1,191 @@
-# ***************************************************************************   
-# *	Name: List of watersheds and datasets available for each watershed  *
-# *	Author: Lisa Paul Palathingal                                       *
-# ***************************************************************************
-
 import requests
 import json
 import zipfile
 import os
+import progressbar
+import time
+import sys
 
-# Function Name: listOfWatersheds
-# Function Description: The function first displays a list of watersheds available from gstore (from the url specified below). User selects a watershed from the list and the function prints the datasets available for the selected watershed. When the user selects a dataset from the list, function downloads the selected dataset.
+def   listWatersheds():
 
-def listOfWatersheds():
     '''
-    Hi
+    listWatersheds function contacts GSTORE and returns a list of watersheds.
     '''
-    count = 0
+    
     wIndex = 1
-    listOfWatershedNames = []
-    listOfCollectionIds = []
-    listOfDatasetNames = []
-    listOfDatasetIds = []
-
+    collectionNames = []
+    collectionIds = []
+   
     rWatersheds = requests.get('http://gstore.unm.edu/apps/epscor/search/collections.json?version=3')
     rData = rWatersheds.json()
-    wResults = rData['results']
+    watershedResults = rData['results']
 
     #Get the length of Watershed list
     countOfWatersheds = rData['subtotal']
 
     #displays the name of all watersheds
     print "\n\nName of watersheds available:\n\n"
-    for wResult in wResults:
+    for wResult in watershedResults:
         print wIndex, ":", wResult['name']
         wIndex += 1
-        listOfWatershedNames.append(wResult['name']) #create a list of names of watersheds
-        listOfCollectionIds.append(wResult['uuid']) #create a list of uuids of watersheds
+        collectionNames.append(wResult['name']) 
+        collectionIds.append(wResult['uuid']) 
+    return countOfWatersheds, collectionNames, collectionIds
+
+def selectAWatershed(wDetails):
+
+    '''
+    selectAWatershed function performs various tasks based on user choice
+    '''
+
+    userWatershedChoice = input("\n\nSelect an option: ")
+    if not 1 <= userWatershedChoice <= wDetails[0]:
+        print "Invalid option. Please try again"
+        selectAWatershed(wDetails)
+    else:
+        return userWatershedChoice     
+
+def getWatershedDetails(userWChoice, wDetails):
     
-    #User selects a name from the list of watersheds
-    while True:
-        nameOfWatershed = input("\n\nSelect a watershed: ")
-        if 1 <= nameOfWatershed <= countOfWatersheds:
-            print "\n\nDatasets available for %s:" %listOfWatershedNames[nameOfWatershed - 1]
-            break
-        else:
-            print "Invalid Option. Please try again"   
-    
-    #get uuid of selected watershed
-    while count < countOfWatersheds:
-        if listOfWatershedNames[nameOfWatershed - 1] == listOfWatershedNames[count]:
-            uid = listOfCollectionIds[count] #collection identifier
-            break
-        else:
-            count += 1  
-  
-    # Function Name: listOfDataSets
-    # Function Description: The user is asked to select a name of dataset from the list. Once the user selects the datset, zip file of the dataset is downloaded from gstore.
-    def listOfDataSets(uid):
-        start = 1
-        rIndex = 1
+    '''
+    getWatershedDetails function finds out the uid of the selected watershed
+    '''
+
+    nameOfWatershed = wDetails[1][userWChoice - 1]
+    uidOfWatershed = wDetails[2][userWChoice - 1]
+    return nameOfWatershed, uidOfWatershed
+
+def   listDatasets(nameOfWatershed, uidOfWatershed):
+
+    '''
+    listDatasets function contacts GSTORE and returns a list of datasets.
+    '''
+
+    rIndex = 1
+    datasetNames = []
+    datasetIds = []
         
-        #url containing the datasets for the selected watershed
-        rDatasets = requests.get('http://gstore.unm.edu/apps/epscor/search/collection/%s/datasets.json?version=3' %uid) 
-        rrData = rDatasets.json()
-        dResults = rrData['results']
-        print "\n\n"
+    rDatasets = requests.get('http://gstore.unm.edu/apps/epscor/search/collection/%s/datasets.json?version=3' %uidOfWatershed) 
+    rrData = rDatasets.json()
+    dataResults = rrData['results']
+    
+    #Get the length of Dataset list
+    countOfDatasets = rrData['subtotal']
 
-        #Get the length of Dataset
-        lengthOfDataset = rrData['subtotal']
+    #displays the name of all datasets
+    print "\n\nDatasets available for %s: " %nameOfWatershed, "\n\n"
+    for dResult in dataResults:
+        print rIndex, ":", dResult['name']
+        rIndex += 1
+        datasetNames.append(dResult['name']) 
+        datasetIds.append(dResult['uuid']) 
+    return countOfDatasets, datasetNames, datasetIds  
 
-        #displays the name of all datasets
-        for dResult in dResults:
-            print rIndex, ":", dResult['name']
-            rIndex += 1
-            listOfDatasetNames.append(dResult['name']) #create a list of names of datsets
-            listOfDatasetIds.append(dResult['uuid']) #create a list of uuids of datasets
-           
-        while True:
-            indexOfDataSet = input("\n\nSelect the name of dataset to be downloaded: \t")
+def selectADataset(dDetails):
 
-            if 1 <= indexOfDataSet <= lengthOfDataset:
-                while start <= lengthOfDataset:
-                    if indexOfDataSet == start:
-                        uuid = listOfDatasetIds[start - 1]
-                        basename = listOfDatasetNames[start - 1]
-                        break
-                    else:
-                        start += 1
-                
-                print "Downloading ..."
+    '''
+    selectADataset function performs various tasks based on user choice
+    '''
 
-                #Downloading the file
-                rDownload = requests.get('http://gstore.unm.edu/apps/epscor/datasets/%s/%s.original.tif' %(uuid, basename))
-                with open("/home/likewise-open/UNR/lpalathingal/Desktop/%s.zip" %basename, "wb") as code:	  
-                    code.write(rDownload.content)
-                print "\nDownloading completed\n"   
-                zip = zipfile.ZipFile(r'%s.zip' %basename)
+    userDatasetChoice = input("\n\nSelect an option: ")
+    if not 1 <= userDatasetChoice <= dDetails[0]:
+        print "Invalid option. Please try again"
+        selectADataset(dDetails)
+    else:
+        return userDatasetChoice
 
-                #unzip the file
-                zip.extractall(r'%s' %basename)
+def getDatasetDetails(userDChoice, dDetails):
+    
+    '''
+    getWatershedDetails function finds out the uid of the selected watershed
+    '''
 
-                #List the name of files available from the downloaded file
-                print "Files available are:\n"
-                dirList = os.listdir(basename)
-                for fname in dirList:
-                    print fname                           
-                break
+    nameOfDataset = dDetails[1][userDChoice - 1]
+    uidOfDataset = dDetails[2][userDChoice - 1]
+    return nameOfDataset, uidOfDataset
+
+
+def downloadDataset(nameOfDataset, uidOfDataset):
+
+    '''
+    downloadDataset function contacts GSTORE and downloads dataset selected by the user
+    '''
+
+    progress = progressbar.ProgressBar()
+    url = "http://gstore.unm.edu/apps/epscor/datasets/%s/%s.original.tif" %(uidOfDataset, nameOfDataset)
+    response = requests.head(url)
+    print "Content length of %s: " %nameOfDataset, response.headers['content-length']
+    print "\nDownloading ..."
+    rDownload = requests.get(url)
+    for i in progress(range(100)): 
+        with open("%s.zip" %nameOfDataset, "wb") as code:	  
+            code.write(rDownload.content)
+        time.sleep(0.01)
+    print "\nDownloading completed\n"  
+    zip = zipfile.ZipFile(r'%s.zip' %nameOfDataset)
+    zip.extractall(r'%s' %nameOfDataset)
+
+    #List the name of files available from the downloaded file
+    print "Files available are:\n"
+    dirList = os.listdir(nameOfDataset)
+    for fname in dirList:
+        print fname  
+    return
+
+def selectDataset(datasetResults):
+
+    '''
+    selectDataset function asks the user to select a dataset
+    and finds out the uid of the selected dataset
+    '''
+
+    userSelect = input("\n\nSelect a dataset: ")
+    if not 1 <= userSelect <= datasetResults[0]:
+        print "Invalid option. Please try again"
+    else:
+        nameOfDataset = datasetResults[1][userSelect - 1]
+        uidOfDataset = datasetResults[2][userSelect - 1]
+    return nameOfDataset, uidOfDataset
+
+def multipleSelect(watershedDetails):
+  
+    '''
+    multipleSelect function asks user for more selects
+    '''
+
+    while True:
+        userMDChoice = raw_input("\nDo you want to download more datasets? (Yes/No):\t")
+        if userMDChoice == "Yes":
+            dsteps(watershedDetails)
+        else:
+            userMWChoice = raw_input("\nDo you want to select another watershed? (Yes/No):\t")
+            if userMWChoice == "Yes":
+                steps()
             else:
-                print "Invalid option. Please try again"                      
-                    
-    listOfDataSets(uid)  
-    while True:
-        answer = raw_input("\nDo you want to download more datasets? (Yes/No):\t")
-        if answer == "Yes":
-            listOfDataSets(uid)
-        else:
-            print "\n"
-            break
-     
+                sys.exit()   
+
+def steps():
+    wDetails = listWatersheds()
+    userWChoice = selectAWatershed(wDetails)
+    watershedDetails = getWatershedDetails(userWChoice, wDetails)
+    dsteps(watershedDetails)
+  
+def dsteps(watershedDetails):
+    dDetails = listDatasets(watershedDetails[0], watershedDetails[1])
+    userDChoice = selectADataset(dDetails)
+    datasetDetails = getDatasetDetails(userDChoice, dDetails)
+    downloadDataset(datasetDetails[0], datasetDetails[1])
+    multipleSelect(watershedDetails)
+    
+            
 if __name__ == "__main__":
-    listOfWatersheds()
-    while True:
-        answer = raw_input("\nDo you want to select another watershed? (Yes/No):\t")
-        if answer == "Yes":
-            listOfWatersheds()
-        else:
-            print "\n"
-            break
-
-
-
+    steps()
+    
+    
+    
+    
+   
+        
+    
+   
+    
