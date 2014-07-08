@@ -32,27 +32,14 @@ def   listWatersheds():
         collectionIds.append(wResult['uuid']) 
     return countOfWatersheds, collectionNames, collectionIds
 
-def selectAWatershed(wDetails):
-
-    '''
-    selectAWatershed function performs various tasks based on user choice
-    '''
-
-    userWatershedChoice = input("\n\nSelect an option: ")
-    if not 1 <= userWatershedChoice <= wDetails[0]:
-        print "Invalid option. Please try again"
-        selectAWatershed(wDetails)
-    else:
-        return userWatershedChoice     
-
-def getWatershedDetails(userWChoice, wDetails):
+def getWatershedDetails(userWatershedChoice, wDetails):
     
     '''
     getWatershedDetails function finds out the uid of the selected watershed
     '''
 
-    nameOfWatershed = wDetails[1][userWChoice - 1]
-    uidOfWatershed = wDetails[2][userWChoice - 1]
+    nameOfWatershed = wDetails[1][userWatershedChoice - 1]
+    uidOfWatershed = wDetails[2][userWatershedChoice - 1]
     return nameOfWatershed, uidOfWatershed
 
 def   listDatasets(nameOfWatershed, uidOfWatershed):
@@ -94,14 +81,14 @@ def selectADataset(dDetails):
     else:
         return userDatasetChoice
 
-def getDatasetDetails(userDChoice, dDetails):
+def getDatasetDetails(userDatasetChoice, dDetails):
     
     '''
     getWatershedDetails function finds out the uid of the selected watershed
     '''
 
-    nameOfDataset = dDetails[1][userDChoice - 1]
-    uidOfDataset = dDetails[2][userDChoice - 1]
+    nameOfDataset = dDetails[1][userDatasetChoice - 1]
+    uidOfDataset = dDetails[2][userDatasetChoice - 1]
     return nameOfDataset, uidOfDataset
 
 
@@ -132,21 +119,6 @@ def downloadDataset(nameOfDataset, uidOfDataset):
         print fname  
     return
 
-def selectDataset(datasetResults):
-
-    '''
-    selectDataset function asks the user to select a dataset
-    and finds out the uid of the selected dataset
-    '''
-
-    userSelect = input("\n\nSelect a dataset: ")
-    if not 1 <= userSelect <= datasetResults[0]:
-        print "Invalid option. Please try again"
-    else:
-        nameOfDataset = datasetResults[1][userSelect - 1]
-        uidOfDataset = datasetResults[2][userSelect - 1]
-    return nameOfDataset, uidOfDataset
-
 def multipleSelect(watershedDetails):
   
     '''
@@ -166,14 +138,24 @@ def multipleSelect(watershedDetails):
 
 def steps():
     wDetails = listWatersheds()
-    userWChoice = selectAWatershed(wDetails)
-    watershedDetails = getWatershedDetails(userWChoice, wDetails)
+    while True:
+        userWatershedChoice = input("\n\nSelect an option: ")
+        if 1 <= userWatershedChoice <= wDetails[0]:
+            break
+        else:
+            print "Invalid option. Please try again."     
+    watershedDetails = getWatershedDetails(userWatershedChoice, wDetails)
     dsteps(watershedDetails)
   
 def dsteps(watershedDetails):
     dDetails = listDatasets(watershedDetails[0], watershedDetails[1])
-    userDChoice = selectADataset(dDetails)
-    datasetDetails = getDatasetDetails(userDChoice, dDetails)
+    while True:
+        userDatasetChoice = input("\n\nSelect an option: ")
+        if 1 <= userDatasetChoice <= dDetails[0]:
+            break
+        else:
+            print "Invalid option. Please try again."     
+    datasetDetails = getDatasetDetails(userDatasetChoice, dDetails)
     downloadDataset(datasetDetails[0], datasetDetails[1])
     multipleSelect(watershedDetails)
     
