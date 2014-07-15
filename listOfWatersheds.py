@@ -6,7 +6,7 @@ import progressbar
 import time
 import sys
 
-def   listWatersheds():
+def listWatersheds():
 
     '''
     listWatersheds function contacts GSTORE and returns a list of watersheds.
@@ -42,7 +42,7 @@ def getWatershedDetails(userWatershedChoice, wDetails):
     uidOfWatershed = wDetails[2][userWatershedChoice - 1]
     return nameOfWatershed, uidOfWatershed
 
-def   listDatasets(nameOfWatershed, uidOfWatershed):
+def listDatasets(nameOfWatershed, uidOfWatershed):
 
     '''
     listDatasets function contacts GSTORE and returns a list of datasets.
@@ -67,19 +67,6 @@ def   listDatasets(nameOfWatershed, uidOfWatershed):
         datasetNames.append(dResult['name']) 
         datasetIds.append(dResult['uuid']) 
     return countOfDatasets, datasetNames, datasetIds  
-
-def selectADataset(dDetails):
-
-    '''
-    selectADataset function performs various tasks based on user choice
-    '''
-
-    userDatasetChoice = input("\n\nSelect an option: ")
-    if not 1 <= userDatasetChoice <= dDetails[0]:
-        print "Invalid option. Please try again"
-        selectADataset(dDetails)
-    else:
-        return userDatasetChoice
 
 def getDatasetDetails(userDatasetChoice, dDetails):
     
