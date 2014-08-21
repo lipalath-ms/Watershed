@@ -1,11 +1,8 @@
 from email.parser import Parser
-from email.message import Message
-from urlparse import urlparse
 from lxml import etree
 import ConfigParser
 import requests
 import json
-import zipfile
 import os
 import progressbar
 import time
@@ -22,9 +19,9 @@ def   listWatersheds():
     collectionIds = []
    
     #Get URL from config file
-    url1 = config.get('URLs', 'collectionURL')
+    collection_url = config.get('URLs', 'collectionURL')
           
-    rWatersheds = requests.get(url1)
+    rWatersheds = requests.get(collection_url)
     rData = rWatersheds.json()
     watershedResults = rData['results']
 
@@ -66,10 +63,9 @@ def   listDatasets(nameOfWatershed, uidOfWatershed):
     datasetIds = []
     
     #Get URL from config file
-    value = config.get('URLs', 'datasetURL')
-    url2 = value %uidOfWatershed
-           
-    rDatasets = requests.get(url2) 
+    dataset_url = config.get('URLs', 'datasetURL')
+             
+    rDatasets = requests.get(dataset_url %uidOfWatershed) 
     rrData = rDatasets.json()
     dataResults = rrData['results']
     
@@ -106,20 +102,19 @@ def getCapabilities(uidOfDataset):
     '''
 
     #Get URL from config file
-    value = config.get('URLs', 'getCapabilitiesURL')
-    serviceDescription_url = value %uidOfDataset
-        
+    serviceDes_url = config.get('URLs', 'getCapabilitiesURL')
+           
     #Dataset service description
-    serviceDescription_url = requests.get(serviceDescription_url)
-    serviceDescription_data = serviceDescription_url.json() 
+    rServiceDes = requests.get(serviceDes_url %uidOfDataset)
+    serviceDescription_data = rServiceDes.json() 
     
        
     #WCS GetCapabilities request from dataset service description
     cap_url = serviceDescription_data['services'][1]['wcs']
-    r_cap = requests.get(cap_url)
+    rCap = requests.get(cap_url)
     
     with open("capabilities.xml", "wb") as code:	  
-        code.write(r_cap.content)
+        code.write(rCap.content)
     
     tree = etree.parse('capabilities.xml')
         
@@ -139,14 +134,13 @@ def describeCoverage(uidOfDataset, coverageName):
     bboxValues = []
 
     #Get URL from config file
-    value = config.get('URLs', 'describeCoverageURL')
-    desCoverage_url = value %(uidOfDataset, coverageName)
-           
+    desCoverage_url = config.get('URLs', 'describeCoverageURL')
+              
     #DescribeCoverage request
-    r_desCoverage = requests.get(desCoverage_url)
+    rDesCoverage = requests.get(desCoverage_url %(uidOfDataset, coverageName))
 
     with open("coverage.xml", "wb") as code:	  
-        code.write(r_desCoverage.content)
+        code.write(rDesCoverage.content)
 
     tree = etree.parse('coverage.xml')
        
@@ -185,14 +179,13 @@ def getCoverage(uidOfDataset, supportedFormat, coverageName, coordinates, CRS):
     '''
 
     #Get URL from config file
-    value = config.get('URLs', 'getCoverageURL')
-    getCoverage_url = value %(uidOfDataset, supportedFormat, coverageName, coordinates, CRS, CRS)
-          
+    getCoverage_url = config.get('URLs', 'getCoverageURL')
+             
     #GetCoverage request
-    r_getCoverage = requests.get(getCoverage_url) 	
-    c = r_getCoverage.content
+    rGetCoverage = requests.get(getCoverage_url %(uidOfDataset, supportedFormat, coverageName, coordinates, CRS, CRS)) 	
+    c = rGetCoverage.content
 
-    content_type = r_getCoverage.headers['content-type']
+    content_type = rGetCoverage.headers['content-type']
 
     return c, content_type
 
