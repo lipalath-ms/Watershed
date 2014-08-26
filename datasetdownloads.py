@@ -20,7 +20,7 @@ def   listWatersheds():
     collectionNames = []
     collectionIds = []
    
-    rWatersheds = requests.get('http://gstore.unm.edu/apps/epscor/search/collections.json?version=3&theme=Climate')
+    rWatersheds = requests.get('http://gstore.unm.edu/apps/epscor/search/collections.json?version=3')
     rData = rWatersheds.json()
     watershedResults = rData['results']
 
